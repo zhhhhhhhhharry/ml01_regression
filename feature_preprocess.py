@@ -103,6 +103,8 @@ class DataPreprocess:
                 self.total_data[col] = self.total_data[col].map(
                     {k: v for v, k in enumerate(self.ordinal_features[col])}
                 )
+                scaler = StandardScaler()
+                self.total_data[col] =scaler.fit_transform(self.total_data[col].values.reshape(-1, 1))
         # 获取所有分类特征列（排除Id）
         self.character_cols = [col for col in self.total_data.dtypes[self.total_data.dtypes == 'object'].index
                                if col != 'Id']
@@ -110,13 +112,13 @@ class DataPreprocess:
             return
         #若果该列只有NA和另一个值，则对该列进行0,1编码
         # 遍历副本以避免遍历中修改列表导致的问题
-        for col in list(self.character_cols):
-            if len(self.total_data[col].unique()) == 2:
-                # 对单列进行独热编码并合并回原数据集
-                dummies = pd.get_dummies(self.total_data[col], prefix=col, drop_first=True)  # drop_first=True 实现二元编码
-                self.total_data = pd.concat([self.total_data, dummies], axis=1)  # 合并编码后的列
-                self.total_data.drop(col, axis=1, inplace=True)  # 删除原始列
-                self.character_cols.remove(col)  # 从字符列列表中移除
+        # for col in list(self.character_cols):
+        #     if len(self.total_data[col].unique()) == 2:
+        #         # 对单列进行独热编码并合并回原数据集
+        #         dummies = pd.get_dummies(self.total_data[col], prefix=col, drop_first=True)  # drop_first=True 实现二元编码
+        #         self.total_data = pd.concat([self.total_data, dummies], axis=1)  # 合并编码后的列
+        #         self.total_data.drop(col, axis=1, inplace=True)  # 删除原始列
+        #         self.character_cols.remove(col)  # 从字符列列表中移除
 
                 # 创建一个编码器实例
         encoder = OneHotEncoder(sparse_output=False, drop='first')  # drop='first'可避免多重共线性

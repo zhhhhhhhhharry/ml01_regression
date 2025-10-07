@@ -4,12 +4,12 @@ def get_args():
     parser = argparse.ArgumentParser(description="House Prices Regression Experiments")
     
     # 数据处理
-    parser.add_argument("--feature", type=str, default="rf",
-                        choices=["full", "pca", "rf", "cov"],
-                        help="Feature type: full / pca / rf / cov")
+    parser.add_argument("--feature", type=str, default="cov",
+                        choices=["full", "pca", "rf", "cov",'cor_pca'],
+                        help="Feature type: full / pca / rf / cov/cor_pca")
     
     # 模型
-    parser.add_argument("--model", type=str, default="xgb",
+    parser.add_argument("--model", type=str, default="linear",
                         choices=["naive", "linear", "lasso", "ridge", "rf", "xgb", "lgb"],
                         help="Model type")
     
@@ -27,11 +27,11 @@ def get_args():
                         help="Enable hyperparameter tuning")
     
     # 通用超参数
-    parser.add_argument("--alpha", type=float, default=0.1,
+    parser.add_argument("--alpha", type=float, default=1,
                         help="Regularization strength (Ridge/Lasso)")
-    parser.add_argument("--lr", type=float, default=0.01,
+    parser.add_argument("--lr", type=float, default=0.001,
                         help="Learning rate for boosting models")
-    parser.add_argument("--n_estimators", type=int, default=3000,
+    parser.add_argument("--n_estimators", type=int, default=5000,
                         help="Number of trees / training rounds")
     parser.add_argument("--max_depth", type=int, default=None,
                         help="Max depth for tree-based models")
