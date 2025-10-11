@@ -293,7 +293,6 @@ class RandomForestRegressor:
         self.max_features = max_features  # 每棵树考虑的最大特征数
         self.random_state = random_state  # 随机种子，保证可复现性
         self.trees = []  # 存储所有树
-    # 新增：实现get_params方法，让GridSearchCV可以获取参数
     def get_params(self, deep=True):
         return {
             'n_estimators': self.n_estimators,
@@ -304,14 +303,13 @@ class RandomForestRegressor:
             'random_state': self.random_state
         }
 
-    # 新增：实现set_params方法，让GridSearchCV可以设置参数
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
             setattr(self, parameter, value)
         return self
     def fit(self, X, y):
         try:
-            y = y.values.ravel()  # 确保是一维数组
+            y = y.values.ravel()  
         except:
             print("y must be a 1-dimensional array.")
 
@@ -339,12 +337,10 @@ class RandomForestRegressor:
         return X[idxs], y[idxs]
 
     def predict(self, X):
-        # 如果输入是DataFrame，转换为NumPy数组
         if isinstance(X, pd.DataFrame):
             X = X.values
         # 收集所有树的预测结果
         tree_preds = np.array([tree.predict(X) for tree in self.trees])
-        # 回归问题：取所有树预测的平均值
         return np.mean(tree_preds, axis=0)
 
     def feature_importances_(self):
@@ -375,7 +371,6 @@ if __name__ == "__main__":
     # 去除Id列
     X = X.drop('Id', axis=1)
     y = pd.read_csv('y_train.csv')
-    # 假设y的目标列名为'label'，如果不是请修改
     if 'Id' in y.columns:
         y = y.drop('Id', axis=1)
 
@@ -386,7 +381,7 @@ if __name__ == "__main__":
 
     # 转换为NumPy数组
     X_train = X_train.values
-    X_test = X_test.values  # 新增测试集转换
+    X_test = X_test.values  
     try:
         y_train = np.log(y_train)
         y_test = np.log(y_test)
@@ -409,7 +404,7 @@ if __name__ == "__main__":
         cv=3,  # 3折交叉验证
         n_jobs=-1,  # 使用所有可用的CPU
         verbose=2,  # 输出搜索过程
-        scoring='neg_mean_squared_error'  # 回归问题常用评分
+        scoring='neg_mean_squared_error'  
     )
     grid_search.fit(X_train, y_train)
     best_model = grid_search.best_estimator_
@@ -421,3 +416,4 @@ if __name__ == "__main__":
     print("RMSE:", rmse)
     # 保存模型
     save_model(best_model, 'rf_model.pkl')
+
