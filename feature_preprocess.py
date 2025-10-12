@@ -47,6 +47,8 @@ class DataPreprocess:
         #加载数据集
         self.sample_submission = pd.read_csv('data/raw/sample_submission.csv',encoding='gbk')
         self.train_data = pd.read_csv('data/raw/train.csv',encoding='gbk')
+        #self.train_data = self.train_data.drop(self.train_data[self.train_data['Id'] == 1299].index)
+        #self.train_data = self.train_data.drop(self.train_data[self.train_data['Id'] == 524].index)
         self.test_data = pd.read_csv('data/raw/test.csv',encoding='gbk')
 
         self.split_data()
@@ -94,6 +96,23 @@ class DataPreprocess:
                 self.total_data[col] =scaler.fit_transform(self.total_data[col].values.reshape(-1, 1))
                 self.x_Train=self.total_data[:len(self.x_Train)]
                 self.x_Test=self.total_data[len(self.x_Train):]
+        for col in numeric_cols:
+            feature_sk = self.x_Train[col].skew()
+            if feature_sk > 1:
+                if (self.x_Train[col] > 0).all() and (self.x_Test[col] > 0).all():
+                    print(f"正偏态特征 {col} 存在负值或零值")
+                    self.x_Train[col] = np.log1p(self.x_Train[col])
+                    self.x_Test[col] = np.log1p(self.x_Test[col])
+                    self.total_data[col] = np.log1p(self.total_data[col])
+                else:
+                    self.x_Train[col] = np.sign(self.x_Train[col]) * np.log1p(np.abs(self.x_Train[col]))
+                    self.x_Test[col] = np.sign(self.x_Test[col]) * np.log1p(np.abs(self.x_Test[col]))
+                    self.total_data[col] = np.sign(self.total_data[col]) * np.log1p(np.abs(self.total_data[col]))
+            elif feature_sk < -1:
+                print(f"负偏态特征 {col} 存在负值或零值")
+                self.x_Train[col] = self.x_Train[col] ** 2
+                self.x_Test[col] = self.x_Test[col] ** 2
+                self.total_data[col] = self.total_data[col] ** 2
         self.y_Train = np.log1p(self.y_Train)  # 对目标变量取对数
 
     def string_encoding(self):
@@ -150,3 +169,23 @@ class DataPreprocess:
             f.write(str(self.columns_encoding))
         with open('columns_new_encoding.txt','w') as f:
             f.write(str(self.columns_new_encoding))
+
+    def data_change(self):
+        for col in self.x_Train.columns:
+            feature_sk = self.x_Train[col].skew()
+            # 对正偏态数据使用对数变换
+            if feature_sk > 1:
+                # 确保数据都是正值（对数变换要求）
+                if (self.x_Train[col] > 0).all() and (self.x_Test[col] > 0).all():
+                    self.x_Train[col] = np.log1p(self.x_Train[col])
+                    self.x_Test[col] = np.log1p(self.x_Test[col])
+                else:
+                    # 如果有负值或零值，使用其他变换
+                    self.x_Train[col] = np.sign(self.x_Train[col]) * np.log1p(np.abs(self.x_Train[col]))
+                    self.x_Test[col] = np.sign(self.x_Test[col]) * np.log1p(np.abs(self.x_Test[col]))
+
+            # 对负偏态数据使用平方变换或其他适当变换
+            elif feature_sk < -1:
+                # 平方变换可以减轻负偏态
+                self.x_Train[col] = self.x_Train[col] ** 2
+                self.x_Test[col] = self.x_Test[col] ** 2
